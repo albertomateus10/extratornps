@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrator Inteligente de Planilhas NPS</title>
+    <!-- CSS Customizado -->
+    <link rel="stylesheet" href="index.css">
+    <!-- FontAwesome para ícones premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- xlsx-js-style para processamento e estilização (Negrito no cabeçalho) no navegador -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <i class="fa-solid fa-file-excel logo-icon"></i>
+            <h1>Extrator de NPS</h1>
+        </div>
+    </header>
+
+    <main>
+        <!-- Card 1: Upload da Planilha -->
+        <section class="card">
+            
+            
+            <div class="upload-container" id="drop-zone">
+                <div class="upload-icon">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                </div>
+                <p class="upload-text">Arraste e solte sua planilha Excel aqui</p>
+                <p class="upload-subtext">ou clique para selecionar do computador (.xlsx, .xls, .csv)</p>
+                <input type="file" id="file-input" accept=".xlsx, .xls, .csv">
+            </div>
+
+            <!-- Caixa com detalhes do arquivo carregado -->
+            <div class="file-info-box" id="file-info-box">
+                <div class="file-details">
+                    <i class="fa-solid fa-circle-check file-icon"></i>
+                    <div>
+                        <div class="file-name" id="file-name">planilha.xlsx</div>
+                        <div class="file-size" id="file-size">120 KB</div>
+                    </div>
+                </div>
+                <button class="btn-remove-file" id="btn-remove-file" title="Remover arquivo">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Seção de Configuração (Oculta até que um arquivo seja carregado) -->
+        <section class="config-grid" id="config-section" style="display: none;">
+            
+            <!-- Card 2: Mapeamento de Colunas -->
+            <div class="card" style="display: none;">
+                <div class="card-title">
+                    <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                    <h2>Mapeamento de Colunas</h2>
+                </div>
+                
+                <div class="mapping-list" id="mapping-list">
+                    <!-- Gerado dinamicamente via JavaScript -->
+                </div>
+
+                <button class="btn-add-row" id="btn-add-row">
+                    <i class="fa-solid fa-plus"></i> Adicionar Nova Coluna
+                </button>
+            </div>
+
+            <!-- Card 3: Configurações do Arquivo e Exportação -->
+            <div class="card action-center">
+                <div style="display: none;">
+                    <div class="card-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        <h2>Configurações do Layout</h2>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-group" style="flex: 1;">
+                            <label class="control-label">Linha do Cabeçalho</label>
+                            <input type="number" id="header-row-num" class="input-custom" value="4" min="1" title="Linha onde estão os títulos das colunas na planilha original.">
+                        </div>
+                        <div class="control-group" style="flex: 1;">
+                            <label class="control-label">Início dos Dados</label>
+                            <input type="number" id="data-row-num" class="input-custom" value="5" min="1" title="Linha onde os dados reais da planilha começam.">
+                        </div>
+                    </div>
+
+                    <div class="control-group" style="margin-bottom: 2rem;">
+                        <label class="control-label">Nome do Arquivo de Saída</label>
+                        <input type="text" id="output-filename" class="input-custom" value="" placeholder="Base NPS DD-MM-AAAA.xlsx">
+                    </div>
+                </div>
+
+                <div class="export-box">
+                    <button class="btn-export" id="btn-export" disabled>
+                        <i class="fa-solid fa-file-export"></i>
+                        <span>Exportar para Excel</span>
+                        <div class="loading-spinner" id="export-spinner"></div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+    </main>
+
+    <!-- Rodapé -->
+
+
+    <!-- Container de Toasts/Notificações -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Script de Lógica do App -->
+    <script src="app.js"></script>
+</body>
+</html>
