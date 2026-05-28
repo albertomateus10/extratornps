@@ -49,6 +49,52 @@
             </div>
         </section>
 
+        <!-- Card 3: Configurações do Arquivo e Exportação (Sempre Visível) -->
+        <div class="card action-center">
+            <div style="display: none;">
+                <div class="card-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    <h2>Configurações do Layout</h2>
+                </div>
+
+                <div class="control-row">
+                    <div class="control-group" style="flex: 1;">
+                        <label class="control-label">Linha do Cabeçalho</label>
+                        <input type="number" id="header-row-num" class="input-custom" value="4" min="1" title="Linha onde estão os títulos das colunas na planilha original.">
+                    </div>
+                    <div class="control-group" style="flex: 1;">
+                        <label class="control-label">Início dos Dados</label>
+                        <input type="number" id="data-row-num" class="input-custom" value="5" min="1" title="Linha onde os dados reais da planilha começam.">
+                    </div>
+                </div>
+
+                <div class="control-group" style="margin-bottom: 2rem;">
+                    <label class="control-label">Nome do Arquivo de Saída</label>
+                    <input type="text" id="output-filename" class="input-custom" value="" placeholder="Base NPS DD-MM-AAAA.xlsx">
+                </div>
+            </div>
+
+            <div class="export-box">
+                <button class="btn-export" id="btn-export" disabled>
+                    <i class="fa-solid fa-file-export"></i>
+                    <span>BASE da CRIS</span>
+                    <div class="loading-spinner" id="export-spinner"></div>
+                </button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="consultants-section">
+                <h3 class="consultants-title">
+                    <i class="fa-solid fa-user-group"></i>
+                    <span>Extrair por Consultor</span>
+                </h3>
+                <div class="consultants-grid" id="consultants-grid">
+                    <!-- Os botões dos consultores serão gerados dinamicamente via JavaScript -->
+                </div>
+            </div>
+        </div>
+
         <!-- Seção de Configuração (Oculta até que um arquivo seja carregado) -->
         <section class="config-grid" id="config-section" style="display: none;">
             
@@ -66,40 +112,6 @@
                 <button class="btn-add-row" id="btn-add-row">
                     <i class="fa-solid fa-plus"></i> Adicionar Nova Coluna
                 </button>
-            </div>
-
-            <!-- Card 3: Configurações do Arquivo e Exportação -->
-            <div class="card action-center">
-                <div style="display: none;">
-                    <div class="card-title">
-                        <i class="fa-solid fa-sliders"></i>
-                        <h2>Configurações do Layout</h2>
-                    </div>
-
-                    <div class="control-row">
-                        <div class="control-group" style="flex: 1;">
-                            <label class="control-label">Linha do Cabeçalho</label>
-                            <input type="number" id="header-row-num" class="input-custom" value="4" min="1" title="Linha onde estão os títulos das colunas na planilha original.">
-                        </div>
-                        <div class="control-group" style="flex: 1;">
-                            <label class="control-label">Início dos Dados</label>
-                            <input type="number" id="data-row-num" class="input-custom" value="5" min="1" title="Linha onde os dados reais da planilha começam.">
-                        </div>
-                    </div>
-
-                    <div class="control-group" style="margin-bottom: 2rem;">
-                        <label class="control-label">Nome do Arquivo de Saída</label>
-                        <input type="text" id="output-filename" class="input-custom" value="" placeholder="Base NPS DD-MM-AAAA.xlsx">
-                    </div>
-                </div>
-
-                <div class="export-box">
-                    <button class="btn-export" id="btn-export" disabled>
-                        <i class="fa-solid fa-file-export"></i>
-                        <span>Exportar para Excel</span>
-                        <div class="loading-spinner" id="export-spinner"></div>
-                    </button>
-                </div>
             </div>
         </section>
 

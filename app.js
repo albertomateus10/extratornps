@@ -14,6 +14,7 @@ const outputFilenameInput = document.getElementById('output-filename');
 const btnExport = document.getElementById('btn-export');
 const exportSpinner = document.getElementById('export-spinner');
 const toastContainer = document.getElementById('toast-container');
+const consultantsGrid = document.getElementById('consultants-grid');
 
 // Estado Global da Aplicação
 let rawWorkbook = null;
@@ -37,11 +38,28 @@ const defaultMappings = [
 
 let columnMappings = [];
 
+// Lista de consultores alvo para extração rápida (ordenada alfabeticamente)
+const TARGET_CONSULTANTS = [
+    "ALAN MULLER BORGES",
+    "BRUNA RENNER RIBEIRO",
+    "EDUARDA ERTHER BATISTA",
+    "ICARO SANTOS DE BRITO",
+    "JEAN DOUGLAS DOS SANTOS ESTULANO",
+    "LETICIA ANGELINA MOREIRA DA SILVA",
+    "MAICON TUCHTENHAGEN FERREIRA",
+    "MARCIA REGINA GON ALVES",
+    "MARCIO MOREIRA DE OLIVEIRA",
+    "TIAGO KAUAN MELO DOS SANTOS"
+];
+
 // Inicialização: copia o mapeamento padrão
 resetMappings();
 
 // Configura o nome do arquivo padrão com a data atual
 setDefaultFilename();
+
+// Renderiza os botões dos consultores na grade
+renderConsultantButtons();
 
 // Carregar Event Listeners
 setupEventListeners();
@@ -173,6 +191,7 @@ function processUploadedFile(file) {
             
             configSection.style.display = 'grid';
             btnExport.disabled = false;
+            toggleConsultantButtons(false);
 
             processHeadersAndPreview();
         } catch (error) {
@@ -327,15 +346,33 @@ function getExcelColumnName(columnNumber) {
 
 
 // Exportar Dados
-function exportData() {
+function exportData(filterConsultantName = null) {
     if (!sheetData || sheetData.length === 0) {
         showToast('Nenhum dado para exportar.', 'error');
         return;
     }
 
-    // Mostrar Spinner
+    // Desabilitar botões durante a exportação
     btnExport.disabled = true;
-    exportSpinner.style.display = 'block';
+    toggleConsultantButtons(true);
+
+    let clickedBtn = null;
+    let originalIconHTML = '';
+    if (filterConsultantName) {
+        // Encontrar o botão do consultor clicado para feedback visual
+        const buttons = consultantsGrid.querySelectorAll('.btn-consultant');
+        for (const btn of buttons) {
+            if (btn.querySelector('span').textContent === filterConsultantName) {
+                clickedBtn = btn;
+                const iconEl = btn.querySelector('i');
+                originalIconHTML = iconEl.outerHTML;
+                iconEl.className = 'fa-solid fa-spinner fa-spin';
+                break;
+            }
+        }
+    } else {
+        exportSpinner.style.display = 'block';
+    }
 
     setTimeout(() => {
         try {
@@ -355,11 +392,27 @@ function exportData() {
             });
             outputRows.push(headers);
 
+            // Determinar qual coluna contém o nome do consultor
+            let consultantColIndex = 12; // Padrão
+            const consultantMapping = columnMappings.find(m => 
+                m.outputHeader && m.outputHeader.toLowerCase().includes('consultor')
+            );
+            if (consultantMapping && consultantMapping.inputColIndex !== '') {
+                consultantColIndex = consultantMapping.inputColIndex;
+            }
+
             // 2. Extrair dados correspondentes
             for (let r = dataRowIdx; r < sheetData.length; r++) {
                 const row = sheetData[r];
                 if (!row || row.every(val => val === null || val === undefined || val === '')) {
                     continue;
+                }
+
+                if (filterConsultantName) {
+                    const rowConsultantVal = row[consultantColIndex];
+                    if (!matchConsultant(rowConsultantVal, filterConsultantName)) {
+                        continue;
+                    }
                 }
 
                 const outputRow = columnMappings.map(m => {
@@ -371,6 +424,12 @@ function exportData() {
                 });
 
                 outputRows.push(outputRow);
+            }
+
+            // Validar se há registros encontrados para o consultor
+            if (filterConsultantName && outputRows.length <= 1) {
+                showToast(`Nenhum registro encontrado para o consultor: ${filterConsultantName}`, 'error');
+                return;
             }
 
             // 3. Criar nova sheet do Excel
@@ -422,8 +481,19 @@ function exportData() {
             // 4. Salvar arquivo
             let filename = outputFilenameInput.value.trim();
             if (!filename) filename = 'nps_extraido.xlsx';
-            if (!filename.endsWith('.xlsx') && !filename.endsWith('.xls')) {
-                filename += '.xlsx';
+            
+            if (filterConsultantName) {
+                // Inserir nome do consultor no final do nome do arquivo (antes da extensão)
+                const extIndex = filename.lastIndexOf('.');
+                if (extIndex !== -1) {
+                    filename = `${filename.substring(0, extIndex)} - ${filterConsultantName}${filename.substring(extIndex)}`;
+                } else {
+                    filename = `${filename} - ${filterConsultantName}.xlsx`;
+                }
+            } else {
+                if (!filename.endsWith('.xlsx') && !filename.endsWith('.xls')) {
+                    filename += '.xlsx';
+                }
             }
 
             XLSX.writeFile(workbook, filename);
@@ -433,7 +503,15 @@ function exportData() {
             console.error(error);
             showToast('Erro ao exportar dados: ' + error.message, 'error');
         } finally {
+            // Re-habilitar botões e restaurar ícones
             btnExport.disabled = false;
+            toggleConsultantButtons(false);
+            if (clickedBtn) {
+                const iconEl = clickedBtn.querySelector('i');
+                if (iconEl) {
+                    iconEl.className = 'fa-solid fa-file-excel';
+                }
+            }
             exportSpinner.style.display = 'none';
         }
     }, 600);
@@ -455,9 +533,55 @@ function resetApp() {
     
     configSection.style.display = 'none';
     btnExport.disabled = true;
+    toggleConsultantButtons(true);
     
     mappingList.innerHTML = '';
     setDefaultFilename();
 
     showToast('Arquivo removido. Pronto para um novo upload.', 'info');
+}
+
+// Renderizar os botões dos consultores na grade
+function renderConsultantButtons() {
+    if (!consultantsGrid) return;
+    consultantsGrid.innerHTML = '';
+    
+    TARGET_CONSULTANTS.forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-consultant';
+        btn.disabled = true; // Desabilitado por padrão até que planilha seja carregada
+        btn.innerHTML = `<i class="fa-solid fa-file-excel"></i> <span>${name}</span>`;
+        btn.addEventListener('click', () => exportData(name));
+        consultantsGrid.appendChild(btn);
+    });
+}
+
+// Habilitar ou desabilitar todos os botões de consultores
+function toggleConsultantButtons(disabled) {
+    if (!consultantsGrid) return;
+    const buttons = consultantsGrid.querySelectorAll('.btn-consultant');
+    buttons.forEach(btn => {
+        btn.disabled = disabled;
+    });
+}
+
+// Comparação robusta de nomes de consultores
+function matchConsultant(rowValue, targetName) {
+    if (!rowValue) return false;
+    const cleanStr = (str) => {
+        return str
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toUpperCase()
+            .replace(/GON\s+ALVES/g, "GONCALVES")
+            .trim();
+    };
+    const cleanRow = cleanStr(rowValue).replace(/\s+/g, ' ');
+    const cleanTarget = cleanStr(targetName).replace(/\s+/g, ' ');
+    
+    if (cleanRow === cleanTarget) return true;
+    if (cleanRow.includes(cleanTarget) || cleanTarget.includes(cleanRow)) {
+        return true;
+    }
+    return false;
 }
