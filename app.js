@@ -14,7 +14,7 @@ const outputFilenameInput = document.getElementById('output-filename');
 const btnExport = document.getElementById('btn-export');
 const exportSpinner = document.getElementById('export-spinner');
 const toastContainer = document.getElementById('toast-container');
-const consultantsGrid = document.getElementById('consultants-grid');
+const consultantsContainer = document.getElementById('consultants-container');
 
 // Estado Global da Aplicação
 let rawWorkbook = null;
@@ -38,19 +38,27 @@ const defaultMappings = [
 
 let columnMappings = [];
 
-// Lista de consultores alvo para extração rápida (ordenada alfabeticamente)
-const TARGET_CONSULTANTS = [
-    "ALAN MULLER BORGES",
-    "BRUNA RENNER RIBEIRO",
-    "EDUARDA ERTHER BATISTA",
-    "ICARO SANTOS DE BRITO",
-    "JEAN DOUGLAS DOS SANTOS ESTULANO",
-    "LETICIA ANGELINA MOREIRA DA SILVA",
-    "MAICON TUCHTENHAGEN FERREIRA",
-    "MARCIA REGINA GON ALVES",
-    "MARCIO MOREIRA DE OLIVEIRA",
-    "TIAGO KAUAN MELO DOS SANTOS"
-];
+// Lista de consultores alvo mapeada por loja
+const TARGET_CONSULTANTS_BY_STORE = {
+    "MATRIZ": [
+        "Alan",
+        "Bruna",
+        "Ícaro",
+        "Márcia",
+        "Eduarda"
+    ],
+    "ZONA SUL": [
+        "Jean",
+        "Maicon"
+    ],
+    "GRAVATAÍ": [
+        "Letícia",
+        "Tiago"
+    ],
+    "VIAMÃO": [
+        "Márcio"
+    ]
+};
 
 // Inicialização: copia o mapeamento padrão
 resetMappings();
@@ -360,7 +368,7 @@ function exportData(filterConsultantName = null) {
     let originalIconHTML = '';
     if (filterConsultantName) {
         // Encontrar o botão do consultor clicado para feedback visual
-        const buttons = consultantsGrid.querySelectorAll('.btn-consultant');
+        const buttons = consultantsContainer.querySelectorAll('.btn-consultant');
         for (const btn of buttons) {
             if (btn.querySelector('span').textContent === filterConsultantName) {
                 clickedBtn = btn;
@@ -483,13 +491,11 @@ function exportData(filterConsultantName = null) {
             if (!filename) filename = 'nps_extraido.xlsx';
             
             if (filterConsultantName) {
-                // Inserir nome do consultor no final do nome do arquivo (antes da extensão)
-                const extIndex = filename.lastIndexOf('.');
-                if (extIndex !== -1) {
-                    filename = `${filename.substring(0, extIndex)} - ${filterConsultantName}${filename.substring(extIndex)}`;
-                } else {
-                    filename = `${filename} - ${filterConsultantName}.xlsx`;
+                // Prepend o nome do consultor no início do nome do arquivo
+                if (!filename.endsWith('.xlsx') && !filename.endsWith('.xls')) {
+                    filename += '.xlsx';
                 }
+                filename = `${filterConsultantName} - ${filename}`;
             } else {
                 if (!filename.endsWith('.xlsx') && !filename.endsWith('.xls')) {
                     filename += '.xlsx';
@@ -541,25 +547,41 @@ function resetApp() {
     showToast('Arquivo removido. Pronto para um novo upload.', 'info');
 }
 
-// Renderizar os botões dos consultores na grade
+// Renderizar os botões dos consultores na grade agrupados por loja
 function renderConsultantButtons() {
-    if (!consultantsGrid) return;
-    consultantsGrid.innerHTML = '';
+    if (!consultantsContainer) return;
+    consultantsContainer.innerHTML = '';
     
-    TARGET_CONSULTANTS.forEach(name => {
-        const btn = document.createElement('button');
-        btn.className = 'btn-consultant';
-        btn.disabled = true; // Desabilitado por padrão até que planilha seja carregada
-        btn.innerHTML = `<i class="fa-solid fa-file-excel"></i> <span>${name}</span>`;
-        btn.addEventListener('click', () => exportData(name));
-        consultantsGrid.appendChild(btn);
+    Object.entries(TARGET_CONSULTANTS_BY_STORE).forEach(([storeName, consultants]) => {
+        const storeGroup = document.createElement('div');
+        storeGroup.className = 'store-group';
+        
+        const storeTitle = document.createElement('div');
+        storeTitle.className = 'store-title';
+        storeTitle.textContent = storeName;
+        storeGroup.appendChild(storeTitle);
+        
+        const grid = document.createElement('div');
+        grid.className = 'consultants-grid';
+        
+        consultants.forEach(name => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-consultant';
+            btn.disabled = true; // Desabilitado por padrão até que a planilha seja carregada
+            btn.innerHTML = `<i class="fa-solid fa-file-excel"></i> <span>${name}</span>`;
+            btn.addEventListener('click', () => exportData(name));
+            grid.appendChild(btn);
+        });
+        
+        storeGroup.appendChild(grid);
+        consultantsContainer.appendChild(storeGroup);
     });
 }
 
 // Habilitar ou desabilitar todos os botões de consultores
 function toggleConsultantButtons(disabled) {
-    if (!consultantsGrid) return;
-    const buttons = consultantsGrid.querySelectorAll('.btn-consultant');
+    if (!consultantsContainer) return;
+    const buttons = consultantsContainer.querySelectorAll('.btn-consultant');
     buttons.forEach(btn => {
         btn.disabled = disabled;
     });
