@@ -107,7 +107,7 @@ function setupEventListeners() {
     headerRowNumInput.addEventListener('change', processHeadersAndPreview);
     dataRowNumInput.addEventListener('change', processHeadersAndPreview);
 
-    btnExport.addEventListener('click', exportData);
+    btnExport.addEventListener('click', () => exportData());
 }
 
 function resetMappings() {
@@ -355,6 +355,9 @@ function getExcelColumnName(columnNumber) {
 
 // Exportar Dados
 function exportData(filterConsultantName = null) {
+    if (filterConsultantName instanceof Event) {
+        filterConsultantName = null;
+    }
     if (!sheetData || sheetData.length === 0) {
         showToast('Nenhum dado para exportar.', 'error');
         return;
@@ -589,8 +592,9 @@ function toggleConsultantButtons(disabled) {
 
 // Comparação robusta de nomes de consultores
 function matchConsultant(rowValue, targetName) {
-    if (!rowValue) return false;
+    if (!rowValue || !targetName) return false;
     const cleanStr = (str) => {
+        if (typeof str !== 'string') str = String(str || '');
         return str
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
